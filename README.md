@@ -1,4 +1,4 @@
-# OSA 1
+# OSA 1 Mock Data API
 
 TypeScript + Express + Zod API raamatute ja arvustuste haldamiseks.
 
@@ -14,6 +14,12 @@ Tootmisbuild:
 ```bash
 npm run build
 npm start
+```
+
+Swagger:
+
+```bash
+http://localhost:3000/api-docs
 ```
 
 ## Endpointid
@@ -45,4 +51,33 @@ Näide:
 
 ```bash
 curl "http://localhost:3000/api/v1/books?language=English&genre=Historical%20Fiction&sortBy=publishedYear&sortOrder=desc&page=1&limit=5"
+```
+
+## Näidis request body
+
+### Uus raamat
+
+```json
+{
+  "title": "The Sample Book",
+  "isbn": "9781234567897",
+  "publishedYear": 2024,
+  "pageCount": 320,
+  "language": "English",
+  "description": "A valid description for a new sample book entry.",
+  "coverImage": "https://example.com/sample-book.jpg",
+  "authorId": 1,
+  "publisherId": 1,
+  "genres": [1, 6]
+}
+```
+
+### Uus review
+
+```json
+{
+  "userName": "Leonti",
+  "rating": 5,
+  "comment": "Very good book."
+}
 ```
