@@ -122,7 +122,6 @@ async function main(): Promise<void> {
 
   const books = [
     {
-      id: 1,
       title: "1984",
       isbn: "9780451524935",
       publishedYear: 1949,
@@ -134,7 +133,6 @@ async function main(): Promise<void> {
       genreIds: [1]
     },
     {
-      id: 2,
       title: "Animal Farm",
       isbn: "9780451526342",
       publishedYear: 1945,
@@ -146,7 +144,6 @@ async function main(): Promise<void> {
       genreIds: [6]
     },
     {
-      id: 3,
       title: "Pride and Prejudice",
       isbn: "9780141439518",
       publishedYear: 1813,
@@ -158,7 +155,6 @@ async function main(): Promise<void> {
       genreIds: [2]
     },
     {
-      id: 4,
       title: "Kafka on the Shore",
       isbn: "9781400079278",
       publishedYear: 2002,
@@ -170,7 +166,6 @@ async function main(): Promise<void> {
       genreIds: [3]
     },
     {
-      id: 5,
       title: "Norwegian Wood",
       isbn: "9780375704024",
       publishedYear: 1987,
@@ -182,7 +177,6 @@ async function main(): Promise<void> {
       genreIds: [4]
     },
     {
-      id: 6,
       title: "Half of a Yellow Sun",
       isbn: "9781400095209",
       publishedYear: 2006,
@@ -194,7 +188,6 @@ async function main(): Promise<void> {
       genreIds: [4]
     },
     {
-      id: 7,
       title: "Purple Hibiscus",
       isbn: "9781616202415",
       publishedYear: 2003,
@@ -206,7 +199,6 @@ async function main(): Promise<void> {
       genreIds: [4]
     },
     {
-      id: 8,
       title: "Journey to the Center of the Earth",
       isbn: "9780486440880",
       publishedYear: 1864,
@@ -218,7 +210,6 @@ async function main(): Promise<void> {
       genreIds: [5]
     },
     {
-      id: 9,
       title: "Twenty Thousand Leagues Under the Seas",
       isbn: "9781503214132",
       publishedYear: 1870,
@@ -230,7 +221,6 @@ async function main(): Promise<void> {
       genreIds: [5]
     },
     {
-      id: 10,
       title: "Mees, kes teadis ussisõnu",
       isbn: "9789985337141",
       publishedYear: 2007,
@@ -243,7 +233,6 @@ async function main(): Promise<void> {
       genreIds: [3]
     },
     {
-      id: 11,
       title: "Rehepapp",
       isbn: "9789985312766",
       publishedYear: 2000,
@@ -255,7 +244,6 @@ async function main(): Promise<void> {
       genreIds: [6, 3]
     },
     {
-      id: 12,
       title: "Emma",
       isbn: "9780141439587",
       publishedYear: 1815,
@@ -268,10 +256,11 @@ async function main(): Promise<void> {
     }
   ];
 
+  const bookIdByIsbn = new Map<string, number>();
+
   for (const book of books) {
-    await prisma.book.create({
+    const createdBook = await prisma.book.create({
       data: {
-        id: book.id,
         title: book.title,
         isbn: book.isbn,
         publishedYear: book.publishedYear,
@@ -286,25 +275,43 @@ async function main(): Promise<void> {
         genres: { connect: book.genreIds.map((id) => ({ id })) }
       }
     });
+
+    bookIdByIsbn.set(createdBook.isbn, createdBook.id);
   }
 
+  const reviewSeeds = [
+    { bookIsbn: "9780451524935", userName: "Anna", rating: 5 as const, comment: "Still frighteningly relevant." },
+    { bookIsbn: "9780451524935", userName: "Mark", rating: 4 as const, comment: "Bleak but brilliant." },
+    { bookIsbn: "9780451526342", userName: "Sofia", rating: 5 as const, comment: "Short, sharp and memorable." },
+    { bookIsbn: "9780141439518", userName: "Liam", rating: 4 as const, comment: "Classic for a reason." },
+    { bookIsbn: "9781400079278", userName: "Noah", rating: 5 as const, comment: "Dreamlike and unforgettable." },
+    { bookIsbn: "9781400079278", userName: "Eva", rating: 4 as const, comment: "Weird in the best way." },
+    { bookIsbn: "9780375704024", userName: "Mia", rating: 4 as const, comment: "Quietly heartbreaking." },
+    { bookIsbn: "9781400095209", userName: "Daniel", rating: 5 as const, comment: "Powerful and human." },
+    { bookIsbn: "9781616202415", userName: "Helena", rating: 4 as const, comment: "Strong voice and tension." },
+    { bookIsbn: "9780486440880", userName: "Karl", rating: 3 as const, comment: "Fun adventure, a little dated." },
+    { bookIsbn: "9781503214132", userName: "Grete", rating: 5 as const, comment: "Big imagination and scope." },
+    { bookIsbn: "9789985337141", userName: "Rasmus", rating: 5 as const, comment: "Very unique and atmospheric." },
+    { bookIsbn: "9789985337141", userName: "Kati", rating: 4 as const, comment: "A memorable Estonian fantasy." },
+    { bookIsbn: "9789985312766", userName: "Tanel", rating: 4 as const, comment: "Funny and unsettling." }
+  ];
+
   await prisma.review.createMany({
-    data: [
-      { id: 1, bookId: 1, userName: "Anna", rating: 5, comment: "Still frighteningly relevant.", createdAt: baseTimestamp },
-      { id: 2, bookId: 1, userName: "Mark", rating: 4, comment: "Bleak but brilliant.", createdAt: baseTimestamp },
-      { id: 3, bookId: 2, userName: "Sofia", rating: 5, comment: "Short, sharp and memorable.", createdAt: baseTimestamp },
-      { id: 4, bookId: 3, userName: "Liam", rating: 4, comment: "Classic for a reason.", createdAt: baseTimestamp },
-      { id: 5, bookId: 4, userName: "Noah", rating: 5, comment: "Dreamlike and unforgettable.", createdAt: baseTimestamp },
-      { id: 6, bookId: 4, userName: "Eva", rating: 4, comment: "Weird in the best way.", createdAt: baseTimestamp },
-      { id: 7, bookId: 5, userName: "Mia", rating: 4, comment: "Quietly heartbreaking.", createdAt: baseTimestamp },
-      { id: 8, bookId: 6, userName: "Daniel", rating: 5, comment: "Powerful and human.", createdAt: baseTimestamp },
-      { id: 9, bookId: 7, userName: "Helena", rating: 4, comment: "Strong voice and tension.", createdAt: baseTimestamp },
-      { id: 10, bookId: 8, userName: "Karl", rating: 3, comment: "Fun adventure, a little dated.", createdAt: baseTimestamp },
-      { id: 11, bookId: 9, userName: "Grete", rating: 5, comment: "Big imagination and scope.", createdAt: baseTimestamp },
-      { id: 12, bookId: 10, userName: "Rasmus", rating: 5, comment: "Very unique and atmospheric.", createdAt: baseTimestamp },
-      { id: 13, bookId: 10, userName: "Kati", rating: 4, comment: "A memorable Estonian fantasy.", createdAt: baseTimestamp },
-      { id: 14, bookId: 11, userName: "Tanel", rating: 4, comment: "Funny and unsettling.", createdAt: baseTimestamp }
-    ]
+    data: reviewSeeds.map((review) => {
+      const bookId = bookIdByIsbn.get(review.bookIsbn);
+
+      if (!bookId) {
+        throw new Error(`Missing seeded book for ISBN ${review.bookIsbn}`);
+      }
+
+      return {
+        bookId,
+        userName: review.userName,
+        rating: review.rating,
+        comment: review.comment,
+        createdAt: baseTimestamp
+      };
+    })
   });
 }
 

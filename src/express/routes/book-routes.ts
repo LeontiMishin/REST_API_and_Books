@@ -324,10 +324,10 @@ export const bookRoutes = Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.post("/books", (request: Request, response: Response, next: NextFunction) => {
+bookRoutes.post("/books", async (request: Request, response: Response, next: NextFunction) => {
   try {
     const body = createBookSchema.parse(request.body);
-    const book = createBook(body);
+    const book = await createBook(body);
 
     response.status(201).json({ data: book });
   } catch (error) {
@@ -354,6 +354,11 @@ bookRoutes.post("/books", (request: Request, response: Response, next: NextFunct
  *           type: string
  *         description: Filter by author name
  *       - in: query
+ *         name: publisher
+ *         schema:
+ *           type: string
+ *         description: Filter by publisher name
+ *       - in: query
  *         name: language
  *         schema:
  *           type: string
@@ -376,6 +381,12 @@ bookRoutes.post("/books", (request: Request, response: Response, next: NextFunct
  *         description: Sort field
  *       - in: query
  *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *         description: Sort direction (legacy alias)
+ *       - in: query
+ *         name: order
  *         schema:
  *           type: string
  *           enum: [asc, desc]
@@ -411,10 +422,10 @@ bookRoutes.post("/books", (request: Request, response: Response, next: NextFunct
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.get("/books", (request: Request, response: Response, next: NextFunction) => {
+bookRoutes.get("/books", async (request: Request, response: Response, next: NextFunction) => {
   try {
     const query = listBooksQuerySchema.parse(request.query);
-    const result = listBooks(query);
+    const result = await listBooks(query);
 
     response.status(200).json(result);
   } catch (error) {
@@ -452,10 +463,10 @@ bookRoutes.get("/books", (request: Request, response: Response, next: NextFuncti
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.get("/books/:id", (request: Request, response: Response, next: NextFunction) => {
+bookRoutes.get("/books/:id", async (request: Request, response: Response, next: NextFunction) => {
   try {
     const params = paramsWithIdSchema.parse(request.params);
-    const book = getBookById(params.id);
+    const book = await getBookById(params.id);
 
     response.status(200).json({ data: book });
   } catch (error) {
@@ -511,11 +522,11 @@ bookRoutes.get("/books/:id", (request: Request, response: Response, next: NextFu
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.put("/books/:id", (request: Request, response: Response, next: NextFunction) => {
+bookRoutes.put("/books/:id", async (request: Request, response: Response, next: NextFunction) => {
   try {
     const params = paramsWithIdSchema.parse(request.params);
     const body = updateBookSchema.parse(request.body);
-    const book = updateBook(params.id, body);
+    const book = await updateBook(params.id, body);
 
     response.status(200).json({ data: book });
   } catch (error) {
@@ -556,10 +567,10 @@ bookRoutes.put("/books/:id", (request: Request, response: Response, next: NextFu
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.delete("/books/:id", (request: Request, response: Response, next: NextFunction) => {
+bookRoutes.delete("/books/:id", async (request: Request, response: Response, next: NextFunction) => {
   try {
     const params = paramsWithIdSchema.parse(request.params);
-    deleteBook(params.id);
+    await deleteBook(params.id);
 
     response.status(200).json({
       data: {
@@ -613,11 +624,11 @@ bookRoutes.delete("/books/:id", (request: Request, response: Response, next: Nex
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.post("/books/:bookId/reviews", (request: Request, response: Response, next: NextFunction) => {
+bookRoutes.post("/books/:bookId/reviews", async (request: Request, response: Response, next: NextFunction) => {
   try {
     const params = paramsWithBookIdSchema.parse(request.params);
     const body = createReviewSchema.parse(request.body);
-    const review = createReview(params.bookId, body);
+    const review = await createReview(params.bookId, body);
 
     response.status(201).json({ data: review });
   } catch (error) {
@@ -657,10 +668,10 @@ bookRoutes.post("/books/:bookId/reviews", (request: Request, response: Response,
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.get("/books/:bookId/reviews", (request: Request, response: Response, next: NextFunction) => {
+bookRoutes.get("/books/:bookId/reviews", async (request: Request, response: Response, next: NextFunction) => {
   try {
     const params = paramsWithBookIdSchema.parse(request.params);
-    const bookReviews = getBookReviews(params.bookId);
+    const bookReviews = await getBookReviews(params.bookId);
 
     response.status(200).json({ data: bookReviews });
   } catch (error) {
@@ -705,10 +716,10 @@ bookRoutes.get("/books/:bookId/reviews", (request: Request, response: Response, 
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.get("/books/:id/average-rating", (request: Request, response: Response, next: NextFunction) => {
+bookRoutes.get("/books/:id/average-rating", async (request: Request, response: Response, next: NextFunction) => {
   try {
     const params = paramsWithIdSchema.parse(request.params);
-    const averageRating = getAverageRating(params.id);
+    const averageRating = await getAverageRating(params.id);
 
     response.status(200).json({ data: averageRating });
   } catch (error) {

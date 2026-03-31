@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import { Prisma } from "@prisma/client";
 import { ZodError } from "zod";
 
 export class AppError extends Error {
@@ -39,6 +40,42 @@ export const errorHandler = (
       details: error.details ?? []
     });
     return;
+  }
+
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2002") {
+      response.status(409).json({
+        error: "Validation failed",
+        details: [
+          {
+            field: "unique",
+            message: "Unique constraint failed"
+          }
+        ]
+      });
+      return;
+    }
+
+    if (error.code === "P2003") {
+      response.status(400).json({
+        error: "Validation failed",
+        details: [
+          {
+            field: "relation",
+            message: "Related entity does not exist"
+          }
+        ]
+      });
+      return;
+    }
+
+    if (error.code === "P2025") {
+      response.status(404).json({
+        error: "Resource not found",
+        details: []
+      });
+      return;
+    }
   }
 
   response.status(500).json({
