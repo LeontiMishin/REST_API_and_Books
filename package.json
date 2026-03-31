@@ -5,9 +5,18 @@
   "type": "commonjs",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "dev:mock": "DATA_SOURCE=mock tsx watch src/server.ts",
+    "dev:postgres": "DATA_SOURCE=postgres tsx watch src/server.ts",
     "build": "tsc --project tsconfig.json",
     "start": "node dist/server.js",
-    "typecheck": "tsc --project tsconfig.json --noEmit"
+    "start:mock": "DATA_SOURCE=mock node dist/server.js",
+    "start:postgres": "DATA_SOURCE=postgres node dist/server.js",
+    "typecheck": "tsc --project tsconfig.json --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:seed": "prisma db seed",
+    "prisma:studio": "prisma studio"
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",
@@ -17,6 +26,9 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "zod": "^3.24.2"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",

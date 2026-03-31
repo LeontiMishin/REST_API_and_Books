@@ -4,7 +4,7 @@ import { AppError } from "../middleware/error-handler";
 import type { BookWithRelations, Review } from "../models/entities";
 import { createPaginatedResponse } from "../utils/pagination";
 import type { CreateBookInput, ListBooksQuery, UpdateBookInput } from "../validators/book-schemas";
-import type { CreateReviewInput } from "../validators/review-schemas";
+import type { CreateReviewInput, ReviewListQuery, UpdateReviewInput } from "../validators/review-schemas";
 
 const bookInclude = {
   author: true,
@@ -273,7 +273,7 @@ export const createReview = async (bookId: number, input: CreateReviewInput): Pr
   return mapReview(review);
 };
 
-export const getBookReviews = async (bookId: number): Promise<Review[]> => {
+export const getBookReviews = async (bookId: number, query?: ReviewListQuery): Promise<Review[]> => {
   const bookExists = await prisma.book.count({ where: { id: bookId } });
 
   if (bookExists === 0) {
@@ -281,8 +281,11 @@ export const getBookReviews = async (bookId: number): Promise<Review[]> => {
   }
 
   const bookReviews = await prisma.review.findMany({
-    where: { bookId },
-    orderBy: { createdAt: "desc" }
+    where: {
+      bookId,
+      ...(query?.rating ? { rating: query.rating } : {})
+    },
+    orderBy: { createdAt: query?.order === "asc" ? "asc" : "desc" }
   });
 
   return bookReviews.map((review) => mapReview(review));
@@ -308,4 +311,39 @@ export const getAverageRating = async (
     averageRating: Number((result._avg.rating ?? 0).toFixed(2)),
     reviewCount: result._count.rating
   };
+};
+
+export const getReviewById = async (id: number): Promise<Review> => {
+  const review = await prisma.review.findUnique({
+    where: { id }
+  });
+
+  if (!review) {
+    throw new AppError(404, "Review not found");
+  }
+
+  return mapReview(review);
+};
+
+export const updateReview = async (id: number, input: UpdateReviewInput): Promise<Review> => {
+  const review = await prisma.review.update({
+    where: { id },
+    data: {
+      userName: input.userName,
+      rating: input.rating,
+      comment: input.comment
+    }
+  });
+
+  return mapReview(review);
+};
+
+export const deleteReview = async (id: number): Promise<void> => {
+  const deleted = await prisma.review.deleteMany({
+    where: { id }
+  });
+
+  if (deleted.count === 0) {
+    throw new AppError(404, "Review not found");
+  }
 };

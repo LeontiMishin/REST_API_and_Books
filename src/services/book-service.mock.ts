@@ -3,7 +3,7 @@ import { AppError } from "../middleware/error-handler";
 import type { Book, BookWithRelations, Review } from "../models/entities";
 import { createPaginatedResponse } from "../utils/pagination";
 import type { CreateBookInput, ListBooksQuery, UpdateBookInput } from "../validators/book-schemas";
-import type { CreateReviewInput } from "../validators/review-schemas";
+import type { CreateReviewInput, ReviewListQuery, UpdateReviewInput } from "../validators/review-schemas";
 
 const generateId = (existingItems: Array<{ id: number }>): number => {
   const maxId = existingItems.reduce((currentMax, item) => Math.max(currentMax, item.id), 0);
@@ -199,14 +199,25 @@ export const createReview = async (bookId: number, input: CreateReviewInput): Pr
   return review;
 };
 
-export const getBookReviews = async (bookId: number): Promise<Review[]> => {
+export const getBookReviews = async (bookId: number, query?: ReviewListQuery): Promise<Review[]> => {
   const bookExists = books.some((book) => book.id === bookId);
 
   if (!bookExists) {
     throw new AppError(404, "Book not found");
   }
 
-  return reviews.filter((review) => review.bookId === bookId);
+  const sortDirection = query?.order === "asc" ? 1 : -1;
+
+  return reviews
+    .filter((review) => {
+      const bookMatch = review.bookId === bookId;
+      const ratingMatch = query?.rating ? review.rating === query.rating : true;
+
+      return bookMatch && ratingMatch;
+    })
+    .sort((leftReview, rightReview) => {
+      return (leftReview.createdAt.getTime() - rightReview.createdAt.getTime()) * sortDirection;
+    });
 };
 
 export const getAverageRating = async (
@@ -230,4 +241,41 @@ export const getAverageRating = async (
     averageRating: Number((totalRating / reviewCount).toFixed(2)),
     reviewCount
   };
+};
+
+export const getReviewById = async (id: number): Promise<Review> => {
+  const review = reviews.find((item) => item.id === id);
+
+  if (!review) {
+    throw new AppError(404, "Review not found");
+  }
+
+  return review;
+};
+
+export const updateReview = async (id: number, input: UpdateReviewInput): Promise<Review> => {
+  const reviewIndex = reviews.findIndex((review) => review.id === id);
+
+  if (reviewIndex === -1) {
+    throw new AppError(404, "Review not found");
+  }
+
+  const updatedReview: Review = {
+    ...reviews[reviewIndex],
+    ...input
+  };
+
+  reviews[reviewIndex] = updatedReview;
+
+  return updatedReview;
+};
+
+export const deleteReview = async (id: number): Promise<void> => {
+  const reviewIndex = reviews.findIndex((review) => review.id === id);
+
+  if (reviewIndex === -1) {
+    throw new AppError(404, "Review not found");
+  }
+
+  reviews.splice(reviewIndex, 1);
 };

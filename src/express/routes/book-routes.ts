@@ -1,23 +1,17 @@
 import { Router } from "express";
-import type { NextFunction, Request, Response } from "express";
 import {
-  createBook,
-  createReview,
-  deleteBook,
-  getAverageRating,
-  getBookById,
-  getBookReviews,
-  listBooks,
-  updateBook
-} from "../../services/book-service";
-import {
-  createBookSchema,
-  listBooksQuerySchema,
-  paramsWithBookIdSchema,
-  paramsWithIdSchema,
-  updateBookSchema
-} from "../../validators/book-schemas";
-import { createReviewSchema } from "../../validators/review-schemas";
+  createBookHandler,
+  createReviewHandler,
+  deleteBookHandler,
+  deleteReviewHandler,
+  getAverageRatingHandler,
+  getBookByIdHandler,
+  getBookReviewsHandler,
+  getReviewByIdHandler,
+  listBooksHandler,
+  updateBookHandler,
+  updateReviewHandler
+} from "../../controllers/book-controller";
 
 export const bookRoutes = Router();
 
@@ -87,13 +81,6 @@ export const bookRoutes = Router();
  *         createdAt:
  *           type: string
  *           format: date-time
- *       required:
- *         - id
- *         - firstName
- *         - lastName
- *         - birthYear
- *         - nationality
- *         - createdAt
  *     Genre:
  *       type: object
  *       properties:
@@ -101,9 +88,6 @@ export const bookRoutes = Router();
  *           type: integer
  *         name:
  *           type: string
- *       required:
- *         - id
- *         - name
  *     Publisher:
  *       type: object
  *       properties:
@@ -121,12 +105,6 @@ export const bookRoutes = Router();
  *         createdAt:
  *           type: string
  *           format: date-time
- *       required:
- *         - id
- *         - name
- *         - country
- *         - foundedYear
- *         - createdAt
  *     Review:
  *       type: object
  *       properties:
@@ -144,19 +122,22 @@ export const bookRoutes = Router();
  *         createdAt:
  *           type: string
  *           format: date-time
- *       required:
- *         - id
- *         - bookId
- *         - userName
- *         - rating
- *         - comment
- *         - createdAt
  *     ReviewCreate:
  *       type: object
  *       required:
  *         - userName
  *         - rating
  *         - comment
+ *       properties:
+ *         userName:
+ *           type: string
+ *         rating:
+ *           type: integer
+ *           enum: [1, 2, 3, 4, 5]
+ *         comment:
+ *           type: string
+ *     ReviewUpdate:
+ *       type: object
  *       properties:
  *         userName:
  *           type: string
@@ -211,19 +192,6 @@ export const bookRoutes = Router();
  *           type: array
  *           items:
  *             $ref: '#/components/schemas/Review'
- *       required:
- *         - id
- *         - title
- *         - isbn
- *         - publishedYear
- *         - pageCount
- *         - language
- *         - description
- *         - authorId
- *         - publisherId
- *         - genres
- *         - createdAt
- *         - updatedAt
  *     BookCreate:
  *       type: object
  *       required:
@@ -293,8 +261,7 @@ export const bookRoutes = Router();
  * /books:
  *   post:
  *     summary: Create a new book
- *     tags:
- *       - Books
+ *     tags: [Books]
  *     requestBody:
  *       required: true
  *       content:
@@ -304,142 +271,76 @@ export const bookRoutes = Router();
  *     responses:
  *       201:
  *         description: Created book
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   $ref: '#/components/schemas/Book'
  *       400:
  *         description: Validation failed
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       409:
  *         description: ISBN already exists
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.post("/books", async (request: Request, response: Response, next: NextFunction) => {
-  try {
-    const body = createBookSchema.parse(request.body);
-    const book = await createBook(body);
-
-    response.status(201).json({ data: book });
-  } catch (error) {
-    next(error);
-  }
-});
+bookRoutes.post("/books", createBookHandler);
 
 /**
  * @openapi
  * /books:
  *   get:
- *     summary: List books with optional filters and pagination
- *     tags:
- *       - Books
+ *     summary: List books with filters, sorting and pagination
+ *     tags: [Books]
  *     parameters:
  *       - in: query
  *         name: title
  *         schema:
  *           type: string
- *         description: Filter by book title
  *       - in: query
  *         name: author
  *         schema:
  *           type: string
- *         description: Filter by author name
  *       - in: query
  *         name: publisher
  *         schema:
  *           type: string
- *         description: Filter by publisher name
  *       - in: query
  *         name: language
  *         schema:
  *           type: string
- *         description: Filter by language
  *       - in: query
  *         name: genre
  *         schema:
  *           type: string
- *         description: Filter by genre name
  *       - in: query
  *         name: year
  *         schema:
  *           type: integer
- *         description: Filter by published year
  *       - in: query
  *         name: sortBy
  *         schema:
  *           type: string
  *           enum: [title, publishedYear]
- *         description: Sort field
- *       - in: query
- *         name: sortOrder
- *         schema:
- *           type: string
- *           enum: [asc, desc]
- *         description: Sort direction (legacy alias)
  *       - in: query
  *         name: order
  *         schema:
  *           type: string
  *           enum: [asc, desc]
- *         description: Sort direction
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
- *         description: Page number
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
- *         description: Page size
  *     responses:
  *       200:
- *         description: List of books
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Book'
- *                 pagination:
- *                   $ref: '#/components/schemas/Pagination'
+ *         description: Paginated list of books
  *       400:
  *         description: Validation failed
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.get("/books", async (request: Request, response: Response, next: NextFunction) => {
-  try {
-    const query = listBooksQuerySchema.parse(request.query);
-    const result = await listBooks(query);
-
-    response.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
-});
+bookRoutes.get("/books", listBooksHandler);
 
 /**
  * @openapi
  * /books/{id}:
  *   get:
  *     summary: Get a book by ID
- *     tags:
- *       - Books
+ *     tags: [Books]
  *     parameters:
  *       - in: path
  *         name: id
@@ -449,38 +350,17 @@ bookRoutes.get("/books", async (request: Request, response: Response, next: Next
  *     responses:
  *       200:
  *         description: Book object
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   $ref: '#/components/schemas/Book'
  *       404:
  *         description: Book not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.get("/books/:id", async (request: Request, response: Response, next: NextFunction) => {
-  try {
-    const params = paramsWithIdSchema.parse(request.params);
-    const book = await getBookById(params.id);
-
-    response.status(200).json({ data: book });
-  } catch (error) {
-    next(error);
-  }
-});
+bookRoutes.get("/books/:id", getBookByIdHandler);
 
 /**
  * @openapi
  * /books/{id}:
  *   put:
  *     summary: Update a book by ID
- *     tags:
- *       - Books
+ *     tags: [Books]
  *     parameters:
  *       - in: path
  *         name: id
@@ -496,51 +376,21 @@ bookRoutes.get("/books/:id", async (request: Request, response: Response, next: 
  *     responses:
  *       200:
  *         description: Updated book
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   $ref: '#/components/schemas/Book'
  *       400:
  *         description: Validation failed
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Book not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       409:
  *         description: ISBN already exists
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.put("/books/:id", async (request: Request, response: Response, next: NextFunction) => {
-  try {
-    const params = paramsWithIdSchema.parse(request.params);
-    const body = updateBookSchema.parse(request.body);
-    const book = await updateBook(params.id, body);
-
-    response.status(200).json({ data: book });
-  } catch (error) {
-    next(error);
-  }
-});
+bookRoutes.put("/books/:id", updateBookHandler);
 
 /**
  * @openapi
  * /books/{id}:
  *   delete:
  *     summary: Delete a book by ID
- *     tags:
- *       - Books
+ *     tags: [Books]
  *     parameters:
  *       - in: path
  *         name: id
@@ -550,45 +400,17 @@ bookRoutes.put("/books/:id", async (request: Request, response: Response, next: 
  *     responses:
  *       200:
  *         description: Deletion result
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: object
- *                   properties:
- *                     message:
- *                       type: string
  *       404:
  *         description: Book not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.delete("/books/:id", async (request: Request, response: Response, next: NextFunction) => {
-  try {
-    const params = paramsWithIdSchema.parse(request.params);
-    await deleteBook(params.id);
-
-    response.status(200).json({
-      data: {
-        message: "Book deleted successfully"
-      }
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+bookRoutes.delete("/books/:id", deleteBookHandler);
 
 /**
  * @openapi
  * /books/{bookId}/reviews:
  *   post:
  *     summary: Create a review for a book
- *     tags:
- *       - Reviews
+ *     tags: [Reviews]
  *     parameters:
  *       - in: path
  *         name: bookId
@@ -604,88 +426,107 @@ bookRoutes.delete("/books/:id", async (request: Request, response: Response, nex
  *     responses:
  *       201:
  *         description: Created review
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   $ref: '#/components/schemas/Review'
  *       400:
  *         description: Validation failed
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Book not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- */
-bookRoutes.post("/books/:bookId/reviews", async (request: Request, response: Response, next: NextFunction) => {
-  try {
-    const params = paramsWithBookIdSchema.parse(request.params);
-    const body = createReviewSchema.parse(request.body);
-    const review = await createReview(params.bookId, body);
-
-    response.status(201).json({ data: review });
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * @openapi
- * /books/{bookId}/reviews:
  *   get:
  *     summary: Get reviews for a book
- *     tags:
- *       - Reviews
+ *     tags: [Reviews]
  *     parameters:
  *       - in: path
  *         name: bookId
  *         required: true
  *         schema:
  *           type: integer
+ *       - in: query
+ *         name: rating
+ *         schema:
+ *           type: integer
+ *           enum: [1, 2, 3, 4, 5]
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [createdAt]
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
  *     responses:
  *       200:
  *         description: Array of reviews
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Review'
  *       404:
  *         description: Book not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.get("/books/:bookId/reviews", async (request: Request, response: Response, next: NextFunction) => {
-  try {
-    const params = paramsWithBookIdSchema.parse(request.params);
-    const bookReviews = await getBookReviews(params.bookId);
+bookRoutes.post("/books/:bookId/reviews", createReviewHandler);
+bookRoutes.get("/books/:bookId/reviews", getBookReviewsHandler);
 
-    response.status(200).json({ data: bookReviews });
-  } catch (error) {
-    next(error);
-  }
-});
+/**
+ * @openapi
+ * /reviews/{id}:
+ *   get:
+ *     summary: Get a review by ID
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Review object
+ *       404:
+ *         description: Review not found
+ *   put:
+ *     summary: Update a review by ID
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ReviewUpdate'
+ *     responses:
+ *       200:
+ *         description: Updated review
+ *       400:
+ *         description: Validation failed
+ *       404:
+ *         description: Review not found
+ *   delete:
+ *     summary: Delete a review by ID
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Review deleted
+ *       404:
+ *         description: Review not found
+ */
+bookRoutes.get("/reviews/:id", getReviewByIdHandler);
+bookRoutes.put("/reviews/:id", updateReviewHandler);
+bookRoutes.delete("/reviews/:id", deleteReviewHandler);
 
 /**
  * @openapi
  * /books/{id}/average-rating:
  *   get:
  *     summary: Get average rating for a book
- *     tags:
- *       - Reviews
+ *     tags: [Reviews]
  *     parameters:
  *       - in: path
  *         name: id
@@ -695,34 +536,7 @@ bookRoutes.get("/books/:bookId/reviews", async (request: Request, response: Resp
  *     responses:
  *       200:
  *         description: Average rating result
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: object
- *                   properties:
- *                     bookId:
- *                       type: integer
- *                     averageRating:
- *                       type: number
- *                     reviewCount:
- *                       type: integer
  *       404:
  *         description: Book not found
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
  */
-bookRoutes.get("/books/:id/average-rating", async (request: Request, response: Response, next: NextFunction) => {
-  try {
-    const params = paramsWithIdSchema.parse(request.params);
-    const averageRating = await getAverageRating(params.id);
-
-    response.status(200).json({ data: averageRating });
-  } catch (error) {
-    next(error);
-  }
-});
+bookRoutes.get("/books/:id/average-rating", getAverageRatingHandler);
