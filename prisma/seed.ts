@@ -5,13 +5,16 @@ const prisma = new PrismaClient();
 const baseTimestamp = new Date("2026-03-17T10:00:00.000Z");
 
 async function main(): Promise<void> {
-  await prisma.$transaction([
-    prisma.review.deleteMany(),
-    prisma.book.deleteMany(),
-    prisma.genre.deleteMany(),
-    prisma.publisher.deleteMany(),
-    prisma.author.deleteMany()
-  ]);
+  await prisma.$executeRawUnsafe(`
+    TRUNCATE TABLE
+      "Review",
+      "_BookToGenre",
+      "Book",
+      "Genre",
+      "Publisher",
+      "Author"
+    RESTART IDENTITY CASCADE
+  `);
 
   await prisma.author.createMany({
     data: [

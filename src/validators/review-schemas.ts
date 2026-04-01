@@ -8,6 +8,14 @@ const ratingSchema = z.union([
   z.literal(5)
 ]);
 
+const queryRatingSchema = z
+  .coerce
+  .number()
+  .int()
+  .min(1)
+  .max(5)
+  .transform((value) => value as z.infer<typeof ratingSchema>);
+
 export const createReviewSchema = z.object({
   userName: z.string().trim().min(2).max(100),
   rating: ratingSchema,
@@ -26,7 +34,7 @@ export const reviewParamsSchema = z.object({
 });
 
 export const reviewListQuerySchema = z.object({
-  rating: ratingSchema.optional(),
+  rating: queryRatingSchema.optional(),
   sortBy: z.enum(["createdAt"]).optional().default("createdAt"),
   order: z.enum(["asc", "desc"]).optional().default("desc")
 });

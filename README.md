@@ -150,7 +150,7 @@ npm run prisma:studio
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v1/books?genre=Historical%20Fiction&language=English&publisher=Penguin&sortBy=publishedYear&order=desc&page=1&limit=5"
+curl "http://localhost:3000/api/v1/books?genre=Historical%20Fiction&language=English&publisher=HarperCollins&sortBy=publishedYear&order=desc&page=1&limit=5"
 ```
 
 ### Reviews
@@ -164,7 +164,7 @@ curl "http://localhost:3000/api/v1/books?genre=Historical%20Fiction&language=Eng
 Example:
 
 ```bash
-curl "http://localhost:3000/api/v1/books/1/reviews?rating=5&sortBy=createdAt&order=desc"
+curl "http://localhost:3000/api/v1/books/1/reviews?rating=4&sortBy=createdAt&order=desc"
 ```
 
 ## Request Body Examples
