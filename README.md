@@ -5,6 +5,10 @@ TypeScript + Express + Zod + Swagger project with two fully separate working mod
 - `OSA 1` — mock data in memory
 - `OSA 2` — PostgreSQL + Prisma ORM
 
+## Author
+
+- `Leonti Mishin`
+
 ## Project Structure
 
 ```text
