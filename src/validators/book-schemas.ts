@@ -23,11 +23,13 @@ export const updateBookSchema = createBookSchema.partial().refine(
 export const listBooksQuerySchema = z.object({
   title: z.string().trim().min(1).optional(),
   author: z.string().trim().min(1).optional(),
+  publisher: z.string().trim().min(1).optional(),
   language: z.string().trim().min(1).optional(),
   genre: z.string().trim().min(1).optional(),
   year: z.coerce.number().int().min(1000).max(new Date().getFullYear()).optional(),
   sortBy: z.enum(["title", "publishedYear"]).optional().default("title"),
   sortOrder: z.enum(["asc", "desc"]).optional().default("asc"),
+  order: z.enum(["asc", "desc"]).optional(),
   page: z.coerce.number().int().positive().optional().default(1),
   limit: z.coerce.number().int().positive().max(100).optional().default(10)
 });

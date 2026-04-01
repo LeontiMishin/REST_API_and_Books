@@ -5,7 +5,7 @@ export const swaggerSpec = swaggerJSDoc({
     openapi: "3.0.0",
     info: {
       title: "Rest API And Books",
-      version: "1.0.0",
+      version: "1.0.0"
     },
     servers: [
       {
